@@ -1,4 +1,6 @@
 import logging
+import re
+import html as _html
 import pandas as pd
 import streamlit as st
 from src.repository import DashboardRepository
@@ -143,7 +145,26 @@ class DashboardService:
             .sort_values([c for c in ["afinidad", "costo_pension"] if c in df.columns], ascending=[False, True][:2])
         )
 
-        top3_cards = top3.to_dict(orient="records")
+        # sanitize top3: strip HTML tags from string fields and ensure numeric columns are numeric
+        if top3 is None:
+            top3_cards = []
+        else:
+            def _strip_tags(val):
+                if pd.isna(val):
+                    return val
+                if isinstance(val, str):
+                    # unescape HTML entities then remove tags
+                    txt = _html.unescape(val)
+                    return re.sub(r"<[^>]+>", "", txt).strip()
+                return val
+
+            for c in top3.select_dtypes(include=[object]).columns:
+                top3[c] = top3[c].apply(_strip_tags)
+            for c in ["afinidad", "costo_matricula", "costo_pension", "duracion"]:
+                if c in top3.columns:
+                    top3[c] = pd.to_numeric(top3[c], errors="coerce")
+
+            top3_cards = top3.to_dict(orient="records")
 
         return {
             "kpis": kpis,

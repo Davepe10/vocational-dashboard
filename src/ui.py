@@ -183,6 +183,40 @@ def render_global_css():
     </style>
     """, unsafe_allow_html=True)
 
+    # Additional responsive tweaks
+    st.markdown("""
+    <style>
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .block-container { padding-left: 12px !important; padding-right: 12px !important; }
+            .main-title { font-size: 1.4rem !important; }
+            .subtitle { font-size: 0.95rem !important; }
+            .top3-title { font-size: 1.2rem !important; }
+            .kpi-card { padding: 12px !important; min-height: 96px !important; }
+            .kpi-value { font-size: 1.4rem !important; }
+            .career-card { min-height: auto !important; padding: 14px !important; }
+            .career-card .badge-match { position: static !important; display: inline-block !important; margin-bottom: 8px !important; border-radius: 10px !important; padding: 6px 10px !important; }
+            .metric-box { padding: 10px !important; }
+            .tag { padding: 5px 8px !important; font-size: 0.72rem !important; }
+            .career-card { margin-bottom: 14px !important; }
+            .stButton button { min-height: 40px !important; }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-card { min-height: 80px !important; }
+            .kpi-value { font-size: 1.1rem !important; }
+            .main-title { font-size: 1.1rem !important; }
+            .career-card .title { font-size: 1.1rem !important; }
+            .career-card .institution { font-size: 0.95rem !important; }
+        }
+
+        /* Subtle professional accent colors for headings */
+        .section-title { color: #0b2545 !important; }
+        .career-card { transition: transform .18s ease, box-shadow .18s ease; }
+        .career-card:hover { transform: translateY(-6px); box-shadow: 0 18px 45px rgba(15,23,42,0.12); }
+    </style>
+    """, unsafe_allow_html=True)
+
 
 def render_header():
     st.markdown('<div class="main-title">📊 Dashboard de Decisión</div>', unsafe_allow_html=True)
@@ -310,19 +344,30 @@ def render_top3(top3: list[dict]):
         return
 
     cols = st.columns(3)
-    for idx, item in enumerate(top3[:3]):
+    for idx, raw_item in enumerate(top3[:3]):
+        # Escape all string values defensively to avoid rendering raw HTML from DB
+        item = {k: (_html.escape(v) if isinstance(v, str) else v) for k, v in raw_item.items()}
         modalidad_val = (item.get("modalidad") or "Sin modalidad")
         tag_class = _get_modality_tag_class(modalidad_val)
-        afinidad_val = float(item.get("afinidad") or 0)
+        try:
+            afinidad_val = float(item.get("afinidad") or 0)
+        except Exception:
+            afinidad_val = 0.0
         duracion_val = item.get("duracion") if item.get("duracion") is not None else "—"
-        costo_matricula_val = float(item.get("costo_matricula") or 0)
-        costo_pension_val = float(item.get("costo_pension") or 0)
-        # escape any HTML coming from DB to avoid injecting markup into the card
-        area_val = _html.escape(str(item.get("area") or ""))
-        carrera_val = _html.escape(str(item.get("carrera") or ""))
-        institucion_val = _html.escape(str(item.get("institucion") or ""))
-        sede_val = _html.escape(str(item.get("sede") or "Sin sede"))
-        razon_val = _html.escape(str(item.get("razon") or ""))
+        try:
+            costo_matricula_val = float(item.get("costo_matricula") or 0)
+        except Exception:
+            costo_matricula_val = 0.0
+        try:
+            costo_pension_val = float(item.get("costo_pension") or 0)
+        except Exception:
+            costo_pension_val = 0.0
+        # textual fields (already escaped above)
+        area_val = str(item.get("area") or "")
+        carrera_val = str(item.get("carrera") or "")
+        institucion_val = str(item.get("institucion") or "")
+        sede_val = str(item.get("sede") or "Sin sede")
+        razon_val = str(item.get("razon") or "")
 
         with cols[idx]:
             st.markdown(f"""
