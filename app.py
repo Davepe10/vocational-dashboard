@@ -192,8 +192,12 @@ with col_f8:
 if st.session_state.get("_clear_filters_pending"):
     st.session_state["_clear_filters_pending"] = False
 
+effective_user_filter = url_user if url_user is not None else (
+    None if st.session_state["filter_usuario"] == "Todos" else safe_int(st.session_state["filter_usuario"])
+)
+
 filters = {
-    "usuario_id": None if st.session_state["filter_usuario"] == "Todos" else safe_int(st.session_state["filter_usuario"]),
+    "usuario_id": effective_user_filter,
     "num_intento": None if st.session_state["filter_intento"] == "Todos" else safe_int(st.session_state["filter_intento"]),
     "modalidad": None if st.session_state["filter_modalidad"] == "Todas" else st.session_state["filter_modalidad"],
     "max_presupuesto": None
