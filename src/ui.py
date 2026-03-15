@@ -297,9 +297,12 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                 paper_bgcolor="white",
                 plot_bgcolor="white",
                 legend_title_text="Tipo institución",
+                font=dict(color="#0f172a"),
             )
-            fig.update_xaxes(title_text="Duración (Años)", gridcolor="#e5e7eb")
-            fig.update_yaxes(title_text="Mensualidad (S/.)", gridcolor="#e5e7eb")
+            fig.update_xaxes(title_text="Duración (Años)", gridcolor="#e5e7eb", tickfont=dict(color="#0f172a"), title_font=dict(color="#0b2545"))
+            fig.update_yaxes(title_text="Mensualidad (S/.)", gridcolor="#e5e7eb", tickfont=dict(color="#0f172a"), title_font=dict(color="#0b2545"))
+            fig.update_traces(marker=dict(opacity=0.85, line=dict(width=1, color="#ffffff")), selector=dict(mode="markers"))
+            fig.update_traces(hoverlabel=dict(bgcolor="#fff", font=dict(color="#0f172a")))
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -315,13 +318,18 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                 values="programas",
                 names="modalidad",
                 hole=0.65,
+                color_discrete_sequence=["#2563eb", "#a855f7", "#10B981"],
             )
+            fig2.update_traces(textinfo='none')
             fig2.update_layout(
                 height=430,
                 margin=dict(l=10, r=10, t=10, b=10),
                 paper_bgcolor="white",
                 showlegend=True,
+                legend=dict(font=dict(color="#0f172a")),
+                annotations=[dict(text=f"{int(modality_df['programas'].sum())}<br>Programas", x=0.5, y=0.5, font_size=16, showarrow=False, font_color="#0f172a")],
             )
+            fig2.update_traces(marker=dict(line=dict(color="#ffffff", width=1)))
             st.plotly_chart(fig2, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -345,10 +353,11 @@ def render_top3(top3: list[dict]):
 
     cols = st.columns(3)
     for idx, raw_item in enumerate(top3[:3]):
-        # Escape all string values defensively to avoid rendering raw HTML from DB
-        item = {k: (_html.escape(v) if isinstance(v, str) else v) for k, v in raw_item.items()}
-        modalidad_val = (item.get("modalidad") or "Sin modalidad")
-        tag_class = _get_modality_tag_class(modalidad_val)
+        # prefer numeric-safe values; build metric box from numbers only (ignore any HTML blobs)
+        item = {k: raw_item.get(k) for k in raw_item.keys()}
+        modalidad_raw = item.get("modalidad") or "Sin modalidad"
+        # modalidad may be comma-separated; render individual tags
+        modalidades = [m.strip() for m in str(modalidad_raw).split(",") if m.strip()]
         try:
             afinidad_val = float(item.get("afinidad") or 0)
         except Exception:
@@ -362,36 +371,41 @@ def render_top3(top3: list[dict]):
             costo_pension_val = float(item.get("costo_pension") or 0)
         except Exception:
             costo_pension_val = 0.0
-        # textual fields (already escaped above)
-        area_val = str(item.get("area") or "")
-        carrera_val = str(item.get("carrera") or "")
-        institucion_val = str(item.get("institucion") or "")
-        sede_val = str(item.get("sede") or "Sin sede")
-        razon_val = str(item.get("razon") or "")
+
+        area_val = _html.escape(str(item.get("area") or ""))
+        carrera_val = _html.escape(str(item.get("carrera") or ""))
+        institucion_val = _html.escape(str(item.get("institucion") or ""))
+        sede_val = _html.escape(str(item.get("sede") or "Sin sede"))
+        razon_val = _html.escape(str(item.get("razon") or ""))
 
         with cols[idx]:
+            # build HTML for card using sanitized values
+            tags_html = "".join([f'<span class="{_get_modality_tag_class(m)}" style="margin-right:6px">{_html.escape(m)}</span>' for m in modalidades])
             st.markdown(f"""
             <div class="career-card">
                 <div class="badge-match">{afinidad_val:.0f}% Match</div>
                 <div class="muted" style="margin-top:8px;font-weight:700;text-transform:uppercase;">{area_val}</div>
-                <div class="title" style="font-size:1.6rem;margin-top:8px;">{carrera_val}</div>
+                <div class="title" style="font-size:1.4rem;margin-top:8px;">{carrera_val}</div>
                 <div class="institution" style="margin-top:6px;">{institucion_val}</div>
                 <div class="sede" style="margin-top:6px;">📍 {sede_val}</div>
 
                 <div class="metric-box">
-                    <div class="metric-label">⏱ Duración</div>
-                    <div class="metric-value">{duracion_val} años</div>
-                    <div style="height:8px"></div>
-                    <div class="metric-label">🧾 Matrícula</div>
-                    <div class="metric-value">S/. {costo_matricula_val:,.2f}</div>
-                    <div style="height:8px"></div>
-                    <div class="metric-label">💸 Mensualidad</div>
-                    <div class="metric-value">S/. {costo_pension_val:,.2f}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <div class="metric-label">⏱ Duración</div>
+                            <div class="metric-value">{duracion_val} años</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div class="metric-label">🧾 Matrícula</div>
+                            <div class="metric-value">S/. {costo_matricula_val:,.0f}</div>
+                            <div style="height:6px"></div>
+                            <div class="metric-label">💸 Mensualidad</div>
+                            <div class="metric-value">S/. {costo_pension_val:,.0f}</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="margin-top:12px;">
-                    <span class="{tag_class}">{modalidad_val}</span>
-                </div>
+                <div style="margin-top:12px;">{tags_html}</div>
 
                 <div class="muted" style="margin-top:14px;"><b>Razón:</b> {razon_val}</div>
             </div>
