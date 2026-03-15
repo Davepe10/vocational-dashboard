@@ -12,8 +12,8 @@ def render_global_css():
         """
     <style>
         :root {
-            --text-strong: #1f2937;
-            --text-soft: #6b7280;
+            --text-strong: #000000;
+            --text-soft: #000000;
             --border-soft: #e5e7eb;
             --panel-bg: #ffffff;
             --panel-alt: #f8fafc;
@@ -137,8 +137,12 @@ def render_global_css():
         .stSelectbox label,
         .stCaption,
         .stMarkdown,
+        .stText,
+        .stSubheader,
+        .stHeader,
         p,
-        span {
+        span,
+        div {
             color: var(--text-strong) !important;
         }
 
@@ -167,12 +171,21 @@ def render_global_css():
             border-radius: 18px !important;
         }
 
+        .table-card {
+            background: #ffffff;
+            border: 1px solid var(--border-soft);
+            border-radius: 22px;
+            padding: 14px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
         .career-card {
             background: var(--panel-bg);
             border-radius: 22px;
             padding: 22px;
             border: 1px solid var(--border-soft);
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            min-height: 100%;
         }
 
         .career-card:hover {
@@ -335,6 +348,7 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                         values=modality_df["programas"],
                         hole=0.68,
                         textinfo="none",
+                        domain=dict(x=[0.0, 0.68], y=[0.0, 1.0]),
                         marker=dict(
                             colors=donut_colors[: len(modality_df)],
                             line=dict(color="#ffffff", width=2),
@@ -357,11 +371,11 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                 margin=dict(l=20, r=20, t=60, b=20),
                 legend=dict(
                     title="Modalidad",
-                    orientation="h",
-                    yanchor="bottom",
-                    y=-0.05,
-                    xanchor="center",
-                    x=0.5,
+                    orientation="v",
+                    yanchor="middle",
+                    y=0.5,
+                    xanchor="left",
+                    x=0.75,
                     font=dict(color="#1f2937"),
                     title_font=dict(color="#1f2937"),
                 ),
@@ -428,6 +442,7 @@ def render_top3(top3):
             pension_display = _clean_text(item.get("costo_pension") or "-")
 
         with cols[idx]:
+            st.markdown('<div class="career-card">', unsafe_allow_html=True)
             st.caption(area.upper())
             st.subheader(carrera)
             st.markdown(f"**{institucion}**")
@@ -438,6 +453,7 @@ def render_top3(top3):
                 st.write(f"Modalidad: {modalidad}")
             if razon:
                 st.write(f"Razón: {razon}")
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_comparison_table(df: pd.DataFrame):
@@ -460,7 +476,9 @@ def render_comparison_table(df: pd.DataFrame):
         "Razón",
     ]
 
+    st.markdown('<div class="table-card">', unsafe_allow_html=True)
     st.dataframe(show_df, use_container_width=True, hide_index=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_footer():
