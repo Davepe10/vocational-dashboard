@@ -139,11 +139,11 @@ with col_f7:
     selected_career = st.selectbox("Carrera", options=career_options, key="filter_career")
 
 def _clear_filters_callback(default_user_val: str, url_locked: bool):
-    # clear URL params
+    # clear URL params (use new API)
     try:
-        st.experimental_set_query_params()
+        st.query_params = {}
     except Exception:
-        # if setting query params is unavailable, ignore
+        # if assigning query_params fails, ignore
         pass
     # Reset session_state keys; if a user is locked by URL keep it
     if "filter_usuario" in st.session_state:
