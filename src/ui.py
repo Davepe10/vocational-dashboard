@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 import plotly.express as px
 import pandas as pd
@@ -330,6 +331,9 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                 annotations=[dict(text=f"{int(modality_df['programas'].sum())}<br>Programas", x=0.5, y=0.5, font_size=16, showarrow=False, font_color="#0f172a")],
             )
             fig2.update_traces(marker=dict(line=dict(color="#ffffff", width=1)))
+            # ensure pie is centered and uses most of the card area
+            fig2.update_traces(domain=dict(x=[0.15, 0.85], y=[0.15, 0.85]))
+            fig2.update_layout(legend=dict(orientation='v', x=1.02, xanchor='left'))
             st.plotly_chart(fig2, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -352,6 +356,18 @@ def render_top3(top3: list[dict]):
         return
 
     cols = st.columns(3)
+    def _strip_tags(s: str) -> str:
+        if s is None:
+            return ""
+        if not isinstance(s, str):
+            return str(s)
+        txt = _html.unescape(s)
+        txt = re.sub(r"<[^>]+>", "", txt)
+        # collapse long HTML remnants
+        if len(txt) > 300:
+            return txt[:240].rstrip() + "..."
+        return txt
+
     for idx, raw_item in enumerate(top3[:3]):
         # prefer numeric-safe values; build metric box from numbers only (ignore any HTML blobs)
         item = {k: raw_item.get(k) for k in raw_item.keys()}
@@ -372,11 +388,11 @@ def render_top3(top3: list[dict]):
         except Exception:
             costo_pension_val = 0.0
 
-        area_val = _html.escape(str(item.get("area") or ""))
-        carrera_val = _html.escape(str(item.get("carrera") or ""))
-        institucion_val = _html.escape(str(item.get("institucion") or ""))
-        sede_val = _html.escape(str(item.get("sede") or "Sin sede"))
-        razon_val = _html.escape(str(item.get("razon") or ""))
+        area_val = _strip_tags(item.get("area") or "")
+        carrera_val = _strip_tags(item.get("carrera") or "")
+        institucion_val = _strip_tags(item.get("institucion") or "")
+        sede_val = _strip_tags(item.get("sede") or "Sin sede")
+        razon_val = _strip_tags(item.get("razon") or "")
 
         with cols[idx]:
             # build HTML for card using sanitized values

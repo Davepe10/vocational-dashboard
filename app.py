@@ -36,7 +36,7 @@ except Exception as e:
     st.stop()
 
 # Read URL params to allow pre-filtering by user (e.g. ?user_id=25)
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 url_user = None
 if "user_id" in query_params:
     try:
@@ -98,10 +98,12 @@ with col_f1:
     )
 
 with col_f2:
-    attempts_options = ["Todos"] + [str(x) for x in filter_options["intentos"]]
+    attempts_options = ["Todos"] + filter_options["intentos"]
     if "filter_intento" not in st.session_state:
         st.session_state["filter_intento"] = "Todos"
-    selected_attempt = st.selectbox("Intento", options=attempts_options, key="filter_intento")
+    def _format_intento(opt):
+        return "Todos" if opt == "Todos" else f"Intento {opt}"
+    selected_attempt = st.selectbox("Intento", options=attempts_options, key="filter_intento", format_func=_format_intento)
 
 with col_f3:
     modality_options = ["Todas"] + filter_options["modalidades"]
@@ -115,10 +117,12 @@ with col_f4:
     max_budget = st.selectbox("Presupuesto Máx.", options=filter_options["budget_options"], key="filter_budget")
 
 with col_f5:
-    duration_options = ["Todas"] + [str(x) for x in filter_options["duraciones"]]
+    duration_options = ["Todas"] + filter_options["duraciones"]
     if "filter_duration" not in st.session_state:
         st.session_state["filter_duration"] = "Todas"
-    max_duration = st.selectbox("Duración Máx. (años)", options=duration_options, key="filter_duration")
+    def _format_duration(opt):
+        return "Todas" if opt == "Todas" else f"Hasta {opt} años"
+    max_duration = st.selectbox("Duración Máx. (años)", options=duration_options, key="filter_duration", format_func=_format_duration)
 
 with col_f6:
     institution_options = ["Todas"] + filter_options["instituciones"]
@@ -136,7 +140,11 @@ with col_f7:
 
 def _clear_filters_callback(default_user_val: str, url_locked: bool):
     # clear URL params
-    st.experimental_set_query_params()
+    try:
+        st.experimental_set_query_params()
+    except Exception:
+        # if setting query params is unavailable, ignore
+        pass
     # Reset session_state keys; if a user is locked by URL keep it
     if "filter_usuario" in st.session_state:
         st.session_state["filter_usuario"] = default_user_val if url_locked else "Todos"
