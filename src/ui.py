@@ -157,6 +157,32 @@ def render_global_css():
             background: #ffffff !important;
         }
 
+        div[role="listbox"] {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #dbe3ee !important;
+        }
+
+        div[role="option"] {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+
+        div[role="option"]:hover {
+            background: #f3f4f6 !important;
+            color: #000000 !important;
+        }
+
+        li[role="option"] {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+
+        li[role="option"]:hover {
+            background: #f3f4f6 !important;
+            color: #000000 !important;
+        }
+
         .stButton button {
             border-radius: 14px !important;
             min-height: 44px !important;
@@ -171,12 +197,15 @@ def render_global_css():
             border-radius: 18px !important;
         }
 
-        .table-card {
-            background: #ffffff;
+        div[data-testid="stDataFrame"],
+        div[data-testid="stDataFrame"] > div {
+            background: #ffffff !important;
+        }
+
+        div[data-testid="stDataFrame"] {
             border: 1px solid var(--border-soft);
-            border-radius: 22px;
-            padding: 14px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+            border-radius: 18px !important;
+            padding: 6px;
         }
 
         .career-card {
@@ -280,7 +309,7 @@ def render_kpis(kpis: dict):
 
 def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
     st.markdown("### Visualizaciones")
-    chart_col1, chart_col2 = st.columns([2.1, 1.05])
+    chart_col1, chart_col2 = st.columns([2.0, 1.2])
 
     with chart_col1:
         if not bubble_df.empty:
@@ -348,7 +377,6 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                         values=modality_df["programas"],
                         hole=0.68,
                         textinfo="none",
-                        domain=dict(x=[0.0, 0.68], y=[0.0, 1.0]),
                         marker=dict(
                             colors=donut_colors[: len(modality_df)],
                             line=dict(color="#ffffff", width=2),
@@ -368,15 +396,15 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                 paper_bgcolor="#ffffff",
                 plot_bgcolor="#ffffff",
                 font=dict(color="#1f2937", size=13),
-                margin=dict(l=20, r=20, t=60, b=20),
+                margin=dict(l=20, r=20, t=60, b=70),
                 legend=dict(
                     title="Modalidad",
-                    orientation="v",
-                    yanchor="middle",
-                    y=0.5,
-                    xanchor="left",
-                    x=0.75,
-                    font=dict(color="#1f2937"),
+                    orientation="h",
+                    yanchor="top",
+                    y=-0.08,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color="#1f2937", size=10),
                     title_font=dict(color="#1f2937"),
                 ),
             )
@@ -442,18 +470,19 @@ def render_top3(top3):
             pension_display = _clean_text(item.get("costo_pension") or "-")
 
         with cols[idx]:
-            st.markdown('<div class="career-card">', unsafe_allow_html=True)
-            st.caption(area.upper())
-            st.subheader(carrera)
-            st.markdown(f"**{institucion}**")
-            st.write(f"Sede: {sede}")
-            st.write(f"**{afinidad:.0f}% de afinidad**")
-            st.write(f"Duración: {duracion_display}   •   Matrícula: {matricula_display}   •   Mensualidad: {pension_display}")
-            if modalidad:
-                st.write(f"Modalidad: {modalidad}")
-            if razon:
-                st.write(f"Razón: {razon}")
-            st.markdown("</div>", unsafe_allow_html=True)
+            card_html = f"""
+            <div class="career-card">
+                <div style="font-size:0.78rem;font-weight:700;letter-spacing:0.03em;margin-bottom:10px;">{_html.escape(area.upper())}</div>
+                <div style="font-size:1.05rem;font-weight:800;margin-bottom:8px;">{_html.escape(carrera)}</div>
+                <div style="font-size:0.92rem;font-weight:700;margin-bottom:12px;">{_html.escape(institucion)}</div>
+                <div style="font-size:0.9rem;margin-bottom:10px;">Sede: {_html.escape(sede)}</div>
+                <div style="font-size:0.95rem;font-weight:800;margin-bottom:12px;">{afinidad:.0f}% de afinidad</div>
+                <div style="font-size:0.88rem;line-height:1.6;margin-bottom:10px;">Duración: {_html.escape(duracion_display)}<br>Matrícula: {_html.escape(matricula_display)}<br>Mensualidad: {_html.escape(pension_display)}</div>
+                {f'<div style="font-size:0.88rem;line-height:1.5;margin-bottom:8px;">Modalidad: {_html.escape(modalidad)}</div>' if modalidad else ''}
+                {f'<div style="font-size:0.88rem;line-height:1.5;">Razón: {_html.escape(razon)}</div>' if razon else ''}
+            </div>
+            """
+            st.markdown(card_html, unsafe_allow_html=True)
 
 
 def render_comparison_table(df: pd.DataFrame):
@@ -476,9 +505,7 @@ def render_comparison_table(df: pd.DataFrame):
         "Razón",
     ]
 
-    st.markdown('<div class="table-card">', unsafe_allow_html=True)
     st.dataframe(show_df, use_container_width=True, hide_index=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_footer():
