@@ -3,6 +3,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 import html as _html
+import textwrap
 
 
 def render_global_css():
@@ -197,10 +198,6 @@ def render_global_css():
             .kpi-value { font-size: 1.4rem !important; }
             .career-card { min-height: auto !important; padding: 14px !important; }
             .career-card .badge-match { position: static !important; display: inline-block !important; margin-bottom: 8px !important; border-radius: 10px !important; padding: 6px 10px !important; }
-            .metric-box { padding: 10px !important; }
-            .tag { padding: 5px 8px !important; font-size: 0.72rem !important; }
-            .career-card { margin-bottom: 14px !important; }
-            .stButton button { min-height: 40px !important; }
         }
 
         @media (max-width: 480px) {
@@ -218,125 +215,7 @@ def render_global_css():
     </style>
     """, unsafe_allow_html=True)
 
-
-def render_header():
-    st.markdown('<div class="main-title">📊 Dashboard de Decisión</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="subtitle">Filtra y compara para elegir la mejor opción según tu presupuesto, tiempo y afinidad vocacional.</div>',
-        unsafe_allow_html=True
-    )
-
-
-def render_kpis(kpis: dict):
-    c1, c2, c3, c4 = st.columns(4)
-
-    with c1:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label" style="color:#6366F1;">Opciones compatibles</div>
-            <div class="kpi-value">{kpis["opciones_compatibles"]}</div>
-            <div class="kpi-sub">Programas compatibles</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c2:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label" style="color:#10B981;">Mensualidad prom.</div>
-            <div class="kpi-value">S/. {kpis["mensualidad_promedio"]:,.0f}</div>
-            <div class="kpi-sub">Rango: {kpis["rango_presupuesto"]}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c3:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label" style="color:#F59E0B;">Duración prom.</div>
-            <div class="kpi-value">{kpis["duracion_promedio"]:.1f} años</div>
-            <div class="kpi-sub">Entre instituciones y universidades</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c4:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label" style="color:#A855F7;">Top modalidad</div>
-            <div class="kpi-value" style="font-size:1.6rem;">{kpis["top_modalidad"]}</div>
-            <div class="kpi-sub">La modalidad más frecuente</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-
-def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
-    col1, col2 = st.columns([2.1, 1])
-
-    with col1:
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Inversión vs. Tiempo de Estudio</div>', unsafe_allow_html=True)
-
-        if bubble_df.empty:
-            st.info("No hay datos para el gráfico principal.")
-        else:
-            fig = px.scatter(
-                bubble_df,
-                x="duracion",
-                y="costo_pension",
-                size="afinidad",
-                color="tipo_origen",
-                hover_name="carrera",
-                hover_data={
-                    "institucion": True,
-                    "duracion": True,
-                    "costo_pension": ":.0f",
-                    "afinidad": ":.0f",
-                },
-                size_max=42,
-            )
-            fig.update_layout(
-                height=430,
-                margin=dict(l=10, r=10, t=10, b=10),
-                paper_bgcolor="white",
-                plot_bgcolor="white",
-                legend_title_text="Tipo institución",
-                font=dict(color="#0f172a"),
-            )
-            fig.update_xaxes(title_text="Duración (Años)", gridcolor="#e5e7eb", tickfont=dict(color="#0f172a"), title_font=dict(color="#0b2545"))
-            fig.update_yaxes(title_text="Mensualidad (S/.)", gridcolor="#e5e7eb", tickfont=dict(color="#0f172a"), title_font=dict(color="#0b2545"))
-            fig.update_traces(marker=dict(opacity=0.85, line=dict(width=1, color="#ffffff")), selector=dict(mode="markers"))
-            fig.update_traces(hoverlabel=dict(bgcolor="#fff", font=dict(color="#0f172a")))
-            st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Oferta por Modalidad</div>', unsafe_allow_html=True)
-
-        if modality_df.empty:
-            st.info("No hay datos para el gráfico de modalidad.")
-        else:
-            fig2 = px.pie(
-                modality_df,
-                values="programas",
-                names="modalidad",
-                hole=0.55,
-                color_discrete_sequence=["#2563eb", "#a855f7", "#10B981"],
-            )
-            fig2.update_traces(textinfo='none')
-            fig2.update_layout(
-                height=420,
-                margin=dict(l=10, r=140, t=10, b=10),
-                paper_bgcolor="white",
-                showlegend=True,
-                legend=dict(font=dict(color="#0f172a"), y=0.5),
-                annotations=[dict(text=f"{int(modality_df['programas'].sum())}<br>Programas", x=0.5, y=0.5, font_size=18, showarrow=False, font_color="#0f172a")],
-            )
-            fig2.update_traces(marker=dict(line=dict(color="#ffffff", width=1)))
-            # enlarge and center pie so it uses more of the card; keep legend vertically centered at right
-            fig2.update_traces(domain=dict(x=[0.06, 0.86], y=[0.12, 0.88]))
-            fig2.update_layout(legend=dict(orientation='v', x=0.95, xanchor='left'))
-            st.plotly_chart(fig2, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
+    # Top3 rendering implemented below using Streamlit primitives (no raw HTML insertion)
 
 def _get_modality_tag_class(modalidad: str) -> str:
     if modalidad == "Presencial":
@@ -349,109 +228,71 @@ def _get_modality_tag_class(modalidad: str) -> str:
 
 
 def render_top3(top3: list[dict]):
-    st.markdown('<div class="top3-title">🏆 Tu Top 3 Personalizado</div>', unsafe_allow_html=True)
+    st.header("🏆 Tu Top 3 Personalizado")
 
     if not top3:
         st.info("No hay recomendaciones para los filtros seleccionados.")
         return
 
     cols = st.columns(3)
-    def _strip_tags(s: str) -> str:
-        if s is None:
-            return ""
-        if not isinstance(s, str):
-            return str(s)
-        txt = _html.unescape(s)
-        txt = re.sub(r"<[^>]+>", "", txt)
-        # collapse long HTML remnants
-        if len(txt) > 300:
-            return txt[:240].rstrip() + "..."
-        return txt
 
-    def _clean_value(v):
-        # ensure string values don't contain any HTML-like fragments
+    def _clean_text(v):
         if v is None:
             return ""
-        if isinstance(v, str):
-            t = _html.unescape(v)
-            # strip script/style blocks first
-            t = re.sub(r'(?is)<(script|style).*?>.*?</\1>', '', t)
-            # remove any HTML tags
-            t = re.sub(r'<[^>]+>', '', t)
-            # unescape entities, remove leftover angle brackets
-            t = _html.unescape(t)
-            t = t.replace('&lt;', '').replace('&gt;', '')
-            t = t.replace('<', '').replace('>', '')
-            # remove HTML attribute patterns like class="..." and any mention of 'div' leftovers
-            t = re.sub(r'class\s*=\s*"[^"]*"', '', t)
-            t = re.sub(r'\bdiv\b', '', t, flags=re.I)
-            # collapse whitespace
-            t = re.sub(r"\s+", " ", t).strip()
-            if len(t) > 280:
-                return t[:240].rstrip() + "..."
-            return t
-        return str(v)
+        if not isinstance(v, str):
+            return str(v)
+        # remove tags and control whitespace
+        t = _html.unescape(v)
+        t = re.sub(r'(?is)<(script|style).*?>.*?</\1>', '', t)
+        t = re.sub(r'<[^>]+>', '', t)
+        t = _html.unescape(t)
+        t = t.replace('\n', ' ').replace('\r', ' ')
+        t = re.sub(r"\s+", " ", t).strip()
+        if len(t) > 280:
+            return t[:240].rstrip() + "..."
+        return t
 
     for idx, raw_item in enumerate(top3[:3]):
-        # prefer numeric-safe values; build metric box from numbers only (ignore any HTML blobs)
         item = {k: raw_item.get(k) for k in raw_item.keys()}
-        modalidad_raw = item.get("modalidad") or "Sin modalidad"
-        # modalidad may be comma-separated; render individual tags
-        modalidades = [m.strip() for m in str(modalidad_raw).split(",") if m.strip()]
-        # numeric-safe parsing
+        area = _clean_text(item.get('area'))
+        carrera = _clean_text(item.get('carrera'))
+        institucion = _clean_text(item.get('institucion'))
+        sede = _clean_text(item.get('sede') or 'Sin sede')
+        razon = _clean_text(item.get('razon') or '')
+        modalidad = _clean_text(item.get('modalidad') or '')
         try:
-            afinidad_val = float(item.get("afinidad") or 0)
+            afinidad = float(item.get('afinidad') or 0)
         except Exception:
-            afinidad_val = 0.0
-        # duracion may be numeric or textual; prefer numeric
+            afinidad = 0.0
         try:
-            duracion_val = int(float(item.get("duracion")))
-            duracion_display = f"{duracion_val} años"
+            dur = int(float(item.get('duracion')))
+            duracion_display = f"{dur} años"
         except Exception:
-            duracion_display = _clean_value(item.get("duracion") or "—")
-
+            duracion_display = _clean_text(item.get('duracion') or '—')
         try:
-            costo_matricula_val = float(item.get("costo_matricula") or 0)
-            costo_matricula_display = f"S/. {costo_matricula_val:,.0f}"
+            mat = float(item.get('costo_matricula') or 0)
+            matricula_display = f"S/. {mat:,.0f}"
         except Exception:
-            costo_matricula_display = _clean_value(item.get("costo_matricula") or "—")
-
+            matricula_display = _clean_text(item.get('costo_matricula') or '—')
         try:
-            costo_pension_val = float(item.get("costo_pension") or 0)
-            costo_pension_display = f"S/. {costo_pension_val:,.0f}"
+            pen = float(item.get('costo_pension') or 0)
+            pension_display = f"S/. {pen:,.0f}"
         except Exception:
-            costo_pension_display = _clean_value(item.get("costo_pension") or "—")
-
-        def _sanitized_display(x):
-            return _html.escape(_clean_value(x or ""))
-
-        area_val = _sanitized_display(item.get("area") or "")
-        carrera_val = _sanitized_display(item.get("carrera") or "")
-        institucion_val = _sanitized_display(item.get("institucion") or "")
-        sede_val = _sanitized_display(item.get("sede") or "Sin sede")
-        razon_val = _sanitized_display(item.get("razon") or "")
+            pension_display = _clean_text(item.get('costo_pension') or '—')
 
         with cols[idx]:
-            # build HTML for card using sanitized values
-            tags_html = "".join([f'<span class="{_get_modality_tag_class(m)}" style="margin-right:6px">{_html.escape(m)}</span>' for m in modalidades])
-            st.markdown(f"""
-            <div class="career-card">
-                <div class="badge-match">{afinidad_val:.0f}% Match</div>
-                <div class="muted" style="margin-top:8px;font-weight:700;text-transform:uppercase;">{area_val}</div>
-                <div class="title" style="font-size:1.4rem;margin-top:8px;">{carrera_val}</div>
-                <div class="institution" style="margin-top:6px;">{institucion_val}</div>
-                <div class="sede" style="margin-top:6px;">📍 {sede_val}</div>
-
-                <div class="metric-box">
-                    <!-- Plain-text metrics: safe, no nested HTML to avoid rendering literal code -->
-                    { _html.escape(f"Duración: {duracion_display}   •   Matrícula: {costo_matricula_display}   •   Mensualidad: {costo_pension_display}") }
-                </div>
-
-                <div style="margin-top:12px;">{tags_html}</div>
-
-                <div class="muted" style="margin-top:14px;"><b>Razón:</b> {razon_val}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.caption(area.upper())
+            st.subheader(carrera)
+            st.markdown(f"**{institucion}**")
+            st.write(f"📍 {sede}")
+            st.write(f"**{afinidad:.0f}% Match**")
+            # metrics as plain text (no HTML)
+            st.write(f"Duración: {duracion_display}   •   Matrícula: {matricula_display}   •   Mensualidad: {pension_display}")
+            # modalidades shown as simple comma-separated badges/text
+            if modalidad:
+                st.write(f"Modalidad: {modalidad}")
+            if razon:
+                st.write(f"Razón: {razon}")
 
 
 def render_comparison_table(df: pd.DataFrame):
