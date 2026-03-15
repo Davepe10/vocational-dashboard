@@ -126,3 +126,21 @@ ORDER BY u.idUsuario;
         except Exception:
             logger.exception("Error reading user role for id %s", user_id)
             return None
+
+    def get_user_info(self, user_id: int) -> dict | None:
+        try:
+            sql = "SELECT idUsuario AS id, email, rol FROM usuario WHERE idUsuario = :uid LIMIT 1;"
+            with self.engine.connect() as conn:
+                df = pd.read_sql(text(sql), conn, params={"uid": user_id})
+            if df.empty:
+                return None
+
+            row = df.iloc[0]
+            return {
+                "id": int(row["id"]),
+                "email": row["email"],
+                "rol": row["rol"],
+            }
+        except Exception:
+            logger.exception("Error reading user info for id %s", user_id)
+            return None

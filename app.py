@@ -70,22 +70,48 @@ default_user = "Todos"
 if url_user is not None and url_user in user_ids:
     default_user = str(url_user)
 
-active_user_label = user_map.get(url_user, f"Usuario {url_user}") if url_user is not None else None
-
+url_user_info = None
 url_user_role = None
+active_user_label = None
 if url_user is not None:
     try:
-        url_user_role = service.repo.get_user_role(url_user)
+        url_user_info = service.repo.get_user_info(url_user)
     except Exception:
-        url_user_role = None
+        url_user_info = None
+
+    if url_user_info is None:
+        st.error(f"No existe un usuario con id {url_user}.")
+        st.stop()
+
+    url_user_role = url_user_info.get("rol")
+    active_user_label = str(url_user_info.get("email") or f"Usuario {url_user}")
+    if url_user not in user_ids:
+        user_map[url_user] = active_user_label
+        user_ids.append(url_user)
+        user_ids.sort()
+        user_options = ["Todos"] + [str(x) for x in user_ids]
+        default_user = str(url_user)
+
+
+def _display_name(label: str) -> str:
+    base = (label or "").strip()
+    if "@" in base:
+        base = base.split("@", 1)[0]
+    base = base.replace(".", " ").replace("_", " ").replace("-", " ").strip()
+    return " ".join(part.capitalize() for part in base.split()) or "Usuario"
 
 render_header()
 
 if url_user is not None:
+    greeting_name = _display_name(active_user_label)
     role_label = url_user_role or "(rol desconocido)"
     st.info(f"Vista filtrada por usuario {url_user} - rol: {role_label}")
+    if str(url_user_role).lower() == "admin":
+        st.markdown(f"**Hola Admin, {greeting_name}**")
+    else:
+        st.markdown(f"**Hola, {greeting_name}**")
     if active_user_label:
-        st.caption(f"Usuario en sesion: {active_user_label}")
+        st.caption(f"Sesion: {active_user_label}")
     if str(url_user_role).lower() != "admin":
         st.warning("Usuario no administrador: solo veras tus datos. Para ver otros usuarios necesita un rol admin.")
 
@@ -214,6 +240,9 @@ except Exception as e:
     st.error("Error consultando la base de datos. Verifica variables, firewall y SSL.")
     st.exception(e)
     st.stop()
+
+if url_user is not None and dataset["comparison_df"].empty:
+    st.warning(f"El usuario {url_user} existe, pero no tiene datos para mostrar con los filtros actuales.")
 
 render_kpis(dataset["kpis"])
 render_charts(dataset["bubble_df"], dataset["modality_df"])
