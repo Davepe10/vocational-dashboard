@@ -443,19 +443,8 @@ def render_top3(top3: list[dict]):
                 <div class="sede" style="margin-top:6px;">📍 {sede_val}</div>
 
                 <div class="metric-box">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                        <div>
-                            <div class="metric-label">⏱ Duración</div>
-                            <div class="metric-value">{duracion_display}</div>
-                        </div>
-                        <div style="text-align:right">
-                            <div class="metric-label">🧾 Matrícula</div>
-                            <div class="metric-value">{costo_matricula_display}</div>
-                            <div style="height:6px"></div>
-                            <div class="metric-label">💸 Mensualidad</div>
-                            <div class="metric-value">{costo_pension_display}</div>
-                        </div>
-                    </div>
+                    <!-- Plain-text metrics: safe, no nested HTML to avoid rendering literal code -->
+                    { _html.escape(f"Duración: {duracion_display}   •   Matrícula: {costo_matricula_display}   •   Mensualidad: {costo_pension_display}") }
                 </div>
 
                 <div style="margin-top:12px;">{tags_html}</div>
