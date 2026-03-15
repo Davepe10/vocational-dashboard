@@ -1,6 +1,7 @@
 import re
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import html as _html
 import textwrap
@@ -329,20 +330,85 @@ def render_kpis(kpis: dict):
 def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
     st.markdown("### Visualizaciones")
     if not bubble_df.empty:
+        color_map = {
+            "Pública": "#0f766e",
+            "Privada": "#ea580c",
+            "Instituto": "#2563eb",
+            "Universidad": "#7c3aed",
+        }
         fig = px.scatter(
             bubble_df,
             x="costo_pension",
             y="afinidad",
             size="costo_pension",
             color="tipo_origen" if "tipo_origen" in bubble_df.columns else None,
+            color_discrete_map=color_map,
             hover_data=bubble_df.columns.tolist(),
+        )
+        fig.update_traces(
+            marker=dict(
+                line=dict(color="#ffffff", width=1.5),
+                opacity=0.88,
+            )
+        )
+        fig.update_layout(
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#f8fafc",
+            font=dict(color="#0f172a", size=13),
+            legend=dict(
+                title="Origen",
+                font=dict(color="#0f172a"),
+                title_font=dict(color="#0f172a"),
+            ),
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis=dict(
+                title="Costo de pension",
+                gridcolor="#dbe3ee",
+                zeroline=False,
+                tickfont=dict(color="#0f172a"),
+                title_font=dict(color="#0f172a"),
+            ),
+            yaxis=dict(
+                title="Afinidad",
+                gridcolor="#dbe3ee",
+                zeroline=False,
+                tickfont=dict(color="#0f172a"),
+                title_font=dict(color="#0f172a"),
+            ),
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No hay datos para el gráfico de burbuja.")
 
     if not modality_df.empty:
-        st.bar_chart(modality_df.set_index("modalidad")["programas"])
+        donut_colors = ["#0f766e", "#2563eb", "#ea580c", "#7c3aed", "#0891b2"]
+        fig = go.Figure(
+            data=[
+                go.Pie(
+                    labels=modality_df["modalidad"],
+                    values=modality_df["programas"],
+                    hole=0.62,
+                    textinfo="label+percent",
+                    textfont=dict(color="#0f172a", size=14),
+                    marker=dict(
+                        colors=donut_colors[: len(modality_df)],
+                        line=dict(color="#ffffff", width=2),
+                    ),
+                )
+            ]
+        )
+        fig.update_layout(
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            font=dict(color="#0f172a", size=13),
+            margin=dict(l=20, r=20, t=20, b=20),
+            legend=dict(
+                title="Modalidad",
+                font=dict(color="#0f172a"),
+                title_font=dict(color="#0f172a"),
+            ),
+        )
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No hay datos por modalidad.")
 
