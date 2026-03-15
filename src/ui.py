@@ -378,7 +378,7 @@ def render_top3(top3: list[dict]):
             t = re.sub(r"<[^>]*>", "", t)
             t = t.replace("&lt;", "").replace("&gt;", "")
             # remove leftover HTML attribute patterns
-            t = re.sub(r"\w+\s*=\s*\"[^"]*\"", "", t)
+            t = re.sub(r'\w+\s*=\s*"[^"]*"', "", t)
             # collapse whitespace
             t = re.sub(r"\s+", " ", t).strip()
             if len(t) > 280:
