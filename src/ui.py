@@ -106,7 +106,7 @@ def render_global_css():
         }
 
         .muted {
-            color: #64748b;
+            color: #475569;
             font-size: 0.93rem;
         }
 
@@ -116,6 +116,9 @@ def render_global_css():
             padding: 14px;
             margin-top: 14px;
             border: 1px solid #eef2f7;
+            color: #0f172a;
+            word-break: break-word;
+            white-space: pre-wrap;
         }
 
         .tag {
@@ -164,12 +167,19 @@ def render_global_css():
             font-weight: 700 !important;
             border: 1px solid #dbe3ee !important;
             background: white !important;
+            color: #0f172a !important;
         }
 
         .stDataFrame {
             background: white !important;
             border-radius: 18px !important;
         }
+        .badge-match { background:#6366F1; color:white; }
+        .career-card .title { color: #0f172a; font-weight:800; }
+        .career-card .institution { color:#6366F1; font-weight:700; }
+        .career-card .sede { color:#475569; }
+        .career-card .metric-label { color:#64748b; font-size:0.86rem; }
+        .career-card .metric-value { color:#0f172a; font-weight:800; font-size:1rem; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -319,16 +329,19 @@ def render_top3(top3: list[dict]):
             <div class="career-card">
                 <div class="badge-match">{afinidad_val:.0f}% Match</div>
                 <div class="muted" style="margin-top:8px;font-weight:700;text-transform:uppercase;">{area_val}</div>
-                <div style="font-size:2rem;font-weight:800;color:#0f172a;margin-top:10px;">{carrera_val}</div>
-                <div style="font-size:1rem;font-weight:700;color:#6366F1;margin-top:4px;">{institucion_val}</div>
-                <div class="muted" style="margin-top:6px;">📍 {sede_val}</div>
+                <div class="title" style="font-size:1.6rem;margin-top:8px;">{carrera_val}</div>
+                <div class="institution" style="margin-top:6px;">{institucion_val}</div>
+                <div class="sede" style="margin-top:6px;">📍 {sede_val}</div>
 
                 <div class="metric-box">
-                    <div class="muted">⏱ Duración</div>
-                    <div style="font-weight:800;">{duracion_val} años</div>
-                    <div class="muted" style="margin-top:8px;">🧾 Matrícula</div>
-                    <div style="margin-top:8px;">💸 Mensualidad</div>
-                    <div style="font-weight:800;">S/. {costo_matricula_val:,.2f}</div>
+                    <div class="metric-label">⏱ Duración</div>
+                    <div class="metric-value">{duracion_val} años</div>
+                    <div style="height:8px"></div>
+                    <div class="metric-label">🧾 Matrícula</div>
+                    <div class="metric-value">S/. {costo_matricula_val:,.2f}</div>
+                    <div style="height:8px"></div>
+                    <div class="metric-label">💸 Mensualidad</div>
+                    <div class="metric-value">S/. {costo_pension_val:,.2f}</div>
                 </div>
 
                 <div style="margin-top:12px;">

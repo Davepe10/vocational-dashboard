@@ -155,10 +155,10 @@ def _clear_filters_callback(default_user_val: str, url_locked: bool):
 with col_f8:
     st.button("Limpiar filtros", use_container_width=True, on_click=_clear_filters_callback, args=(default_user, disable_user))
 
-# If a clear-filters action was requested in the callback, perform a safe rerun now
+# If a clear-filters action was requested in the callback, clear the flag.
+# Streamlit will rerun after the callback returns, so an explicit rerun is unnecessary
 if st.session_state.get("_clear_filters_pending"):
     st.session_state["_clear_filters_pending"] = False
-    st.experimental_rerun()
 
 filters = {
     "usuario_id": None if st.session_state["filter_usuario"] == "Todos" else safe_int(st.session_state["filter_usuario"]),
