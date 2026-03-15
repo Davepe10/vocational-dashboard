@@ -293,47 +293,58 @@ def render_top3(top3: list[dict]):
                 st.write(f"Modalidad: {modalidad}")
             if razon:
                 st.write(f"Razón: {razon}")
+            if razon:
+                st.write(f"Razón: {razon}")
 
 
-        def render_header():
-            st.markdown("""
-            <div class="main-title">Orientación Vocacional</div>
-            <div class="subtitle">Encuentra las mejores opciones según tu perfil</div>
-            """, unsafe_allow_html=True)
+def render_header():
+    st.markdown(
+        """
+    <div class="main-title">Orientación Vocacional</div>
+    <div class="subtitle">Encuentra las mejores opciones según tu perfil</div>
+    """,
+        unsafe_allow_html=True,
+    )
 
 
-        def render_kpis(kpis: dict):
-            cols = st.columns(4)
-            labels = [
-                ("Opciones", kpis.get("opciones_compatibles", 0)),
-                ("Mensualidad", f"S/. {kpis.get('mensualidad_promedio', 0):,.0f}" if kpis.get('mensualidad_promedio') else "S/. 0"),
-                ("Duración (años)", f"{kpis.get('duracion_promedio', 0):.1f}"),
-                ("Top modalidad", kpis.get("top_modalidad", "Sin datos")),
-            ]
-            for c, (label, value) in zip(cols, labels):
-                with c:
-                    st.markdown(f"<div class=\"kpi-card\"><div class=\"kpi-label\">{label}</div><div class=\"kpi-value\">{value}</div></div>", unsafe_allow_html=True)
+def render_kpis(kpis: dict):
+    cols = st.columns(4)
+    labels = [
+        ("Opciones", kpis.get("opciones_compatibles", 0)),
+        (
+            "Mensualidad",
+            f"S/. {kpis.get('mensualidad_promedio', 0):,.0f}" if kpis.get("mensualidad_promedio") else "S/. 0",
+        ),
+        ("Duración (años)", f"{kpis.get('duracion_promedio', 0):.1f}"),
+        ("Top modalidad", kpis.get("top_modalidad", "Sin datos")),
+    ]
+    for c, (label, value) in zip(cols, labels):
+        with c:
+            st.markdown(
+                f"<div class=\"kpi-card\"><div class=\"kpi-label\">{label}</div><div class=\"kpi-value\">{value}</div></div>",
+                unsafe_allow_html=True,
+            )
 
 
-        def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
-            st.markdown("### Visualizaciones")
-            if not bubble_df.empty:
-                fig = px.scatter(
-                    bubble_df,
-                    x="costo_pension",
-                    y="afinidad",
-                    size="costo_pension",
-                    color="tipo_origen" if "tipo_origen" in bubble_df.columns else None,
-                    hover_data=bubble_df.columns.tolist(),
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No hay datos para el gráfico de burbuja.")
+def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
+    st.markdown("### Visualizaciones")
+    if not bubble_df.empty:
+        fig = px.scatter(
+            bubble_df,
+            x="costo_pension",
+            y="afinidad",
+            size="costo_pension",
+            color="tipo_origen" if "tipo_origen" in bubble_df.columns else None,
+            hover_data=bubble_df.columns.tolist(),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No hay datos para el gráfico de burbuja.")
 
-            if not modality_df.empty:
-                st.bar_chart(modality_df.set_index("modalidad")["programas"])
-            else:
-                st.info("No hay datos por modalidad.")
+    if not modality_df.empty:
+        st.bar_chart(modality_df.set_index("modalidad")["programas"])
+    else:
+        st.info("No hay datos por modalidad.")
 
 
 def render_comparison_table(df: pd.DataFrame):
