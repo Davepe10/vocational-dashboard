@@ -1,0 +1,41 @@
+/.venv
+.env
+.env.*
+.streamlit/secrets.toml
+.streamlit/secrets.toml.*
+__pycache__/
+*.pyc
+.pytest_cache/
+.cache/
+dist/
+build/
+*.egg-info/
+.DS_Store
+/.vscode
+/.idea
+/*.log
+credentials.json# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Env
+.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Cache
+.pytest_cache/
+.mypy_cache/

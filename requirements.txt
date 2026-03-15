@@ -1,0 +1,8 @@
+streamlit==1.42.0
+pandas==2.2.3
+plotly==6.0.0
+SQLAlchemy==2.0.38
+PyMySQL==1.1.1
+pydantic==2.10.6
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
