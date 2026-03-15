@@ -422,11 +422,14 @@ def render_top3(top3: list[dict]):
         except Exception:
             costo_pension_display = _clean_value(item.get("costo_pension") or "—")
 
-        area_val = _clean_value(item.get("area") or "")
-        carrera_val = _clean_value(item.get("carrera") or "")
-        institucion_val = _clean_value(item.get("institucion") or "")
-        sede_val = _clean_value(item.get("sede") or "Sin sede")
-        razon_val = _clean_value(item.get("razon") or "")
+        def _sanitized_display(x):
+            return _html.escape(_clean_value(x or ""))
+
+        area_val = _sanitized_display(item.get("area") or "")
+        carrera_val = _sanitized_display(item.get("carrera") or "")
+        institucion_val = _sanitized_display(item.get("institucion") or "")
+        sede_val = _sanitized_display(item.get("sede") or "Sin sede")
+        razon_val = _sanitized_display(item.get("razon") or "")
 
         with cols[idx]:
             # build HTML for card using sanitized values
