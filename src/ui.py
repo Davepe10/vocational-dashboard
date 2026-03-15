@@ -227,7 +227,7 @@ def _get_modality_tag_class(modalidad: str) -> str:
     return "tag"
 
 
-def render_top3(top3: list[dict]):
+def render_top3(top3):
     st.header("🏆 Tu Top 3 Personalizado")
 
     if not top3:
