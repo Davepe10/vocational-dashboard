@@ -1,17 +1,30 @@
+import html as _html
 import re
-import streamlit as st
+
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
-import html as _html
-import textwrap
+import streamlit as st
 
 
 def render_global_css():
-    st.markdown("""
+    st.markdown(
+        """
     <style>
+        :root {
+            --text-strong: #1f2937;
+            --text-soft: #6b7280;
+            --border-soft: #e5e7eb;
+            --panel-bg: #ffffff;
+            --panel-alt: #f8fafc;
+            --brand-blue: #5b6ee1;
+            --brand-green: #27b48a;
+            --brand-gold: #d9a63a;
+            --brand-violet: #a855f7;
+        }
+
         .stApp {
-            background: linear-gradient(180deg, #f6f7fb 0%, #f3f5fb 100%);
+            background: linear-gradient(180deg, #fbfbfd 0%, #f5f7fb 100%);
         }
 
         .block-container {
@@ -23,22 +36,22 @@ def render_global_css():
         .main-title {
             font-size: 2.2rem;
             font-weight: 800;
-            color: #1e293b;
+            color: var(--text-strong);
             margin-bottom: 0.15rem;
         }
 
         .subtitle {
-            color: #64748b;
+            color: var(--text-soft);
             margin-bottom: 1.3rem;
             font-size: 1rem;
         }
 
         .kpi-card {
-            background: #ffffff;
+            background: var(--panel-bg);
             border-radius: 20px;
             padding: 22px;
-            border: 1px solid #e9edf5;
-            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
             min-height: 132px;
         }
 
@@ -53,75 +66,46 @@ def render_global_css():
         .kpi-value {
             font-size: 2rem;
             font-weight: 800;
-            color: #0f172a;
+            color: var(--text-strong);
             line-height: 1.1;
         }
 
         .kpi-sub {
-            color: #64748b;
+            color: var(--text-soft);
             margin-top: 8px;
             font-size: 0.92rem;
         }
 
-        .section-card {
-            background: #ffffff;
-            border-radius: 22px;
-            padding: 18px 18px 10px 18px;
-            border: 1px solid #e9edf5;
-            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+        .kpi-blue {
+            background: #eef2ff;
         }
 
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 8px;
+        .kpi-blue .kpi-label {
+            color: var(--brand-blue);
         }
 
-        .top3-title {
-            margin-top: 18px;
-            margin-bottom: 10px;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #0f172a;
+        .kpi-green {
+            background: #ecfdf6;
         }
 
-        .career-card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 22px;
-            border: 1px solid #e9edf5;
-            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
-            position: relative;
-            min-height: 355px;
+        .kpi-green .kpi-label {
+            color: var(--brand-green);
         }
 
-        .badge-match {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #111827;
-            color: white;
-            font-weight: 800;
-            padding: 10px 14px;
-            border-radius: 0 24px 0 16px;
-            font-size: 0.9rem;
+        .kpi-gold {
+            background: #fff9e9;
         }
 
-        .muted {
-            color: #475569;
-            font-size: 0.93rem;
+        .kpi-gold .kpi-label {
+            color: var(--brand-gold);
         }
 
-        .metric-box {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 14px;
-            margin-top: 14px;
-            border: 1px solid #eef2f7;
-            color: #0f172a;
-            word-break: break-word;
-            white-space: pre-wrap;
+        .kpi-violet {
+            background: #faf1ff;
+        }
+
+        .kpi-violet .kpi-label {
+            color: var(--brand-violet);
         }
 
         .tag {
@@ -149,19 +133,24 @@ def render_global_css():
             color: #9333ea;
         }
 
-        .filter-block {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 12px;
-            border: 1px solid #e9edf5;
-            box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
-            margin-bottom: 18px;
+        label,
+        .stSelectbox label,
+        .stCaption,
+        .stMarkdown,
+        p,
+        span {
+            color: var(--text-strong) !important;
+        }
+
+        [data-baseweb="select"] * {
+            color: var(--text-strong) !important;
         }
 
         div[data-baseweb="select"] > div {
             border-radius: 14px !important;
             min-height: 44px !important;
             border-color: #dbe3ee !important;
+            background: #ffffff !important;
         }
 
         .stButton button {
@@ -170,53 +159,69 @@ def render_global_css():
             font-weight: 700 !important;
             border: 1px solid #dbe3ee !important;
             background: white !important;
-            color: #0f172a !important;
+            color: var(--text-strong) !important;
         }
 
         .stDataFrame {
             background: white !important;
             border-radius: 18px !important;
         }
-        .badge-match { background:#6366F1; color:white; }
-        .career-card .title { color: #0f172a; font-weight:800; }
-        .career-card .institution { color:#6366F1; font-weight:700; }
-        .career-card .sede { color:#475569; }
-        .career-card .metric-label { color:#64748b; font-size:0.86rem; }
-        .career-card .metric-value { color:#0f172a; font-weight:800; font-size:1rem; }
-    </style>
-    """, unsafe_allow_html=True)
 
-    # Additional responsive tweaks
-    st.markdown("""
-    <style>
-        /* Responsive adjustments */
+        .career-card {
+            background: var(--panel-bg);
+            border-radius: 22px;
+            padding: 22px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .career-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
+        }
+
         @media (max-width: 900px) {
-            .block-container { padding-left: 12px !important; padding-right: 12px !important; }
-            .main-title { font-size: 1.4rem !important; }
-            .subtitle { font-size: 0.95rem !important; }
-            .top3-title { font-size: 1.2rem !important; }
-            .kpi-card { padding: 12px !important; min-height: 96px !important; }
-            .kpi-value { font-size: 1.4rem !important; }
-            .career-card { min-height: auto !important; padding: 14px !important; }
-            .career-card .badge-match { position: static !important; display: inline-block !important; margin-bottom: 8px !important; border-radius: 10px !important; padding: 6px 10px !important; }
+            .block-container {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+
+            .main-title {
+                font-size: 1.4rem !important;
+            }
+
+            .subtitle {
+                font-size: 0.95rem !important;
+            }
+
+            .kpi-card {
+                padding: 12px !important;
+                min-height: 96px !important;
+            }
+
+            .kpi-value {
+                font-size: 1.4rem !important;
+            }
         }
 
         @media (max-width: 480px) {
-            .kpi-card { min-height: 80px !important; }
-            .kpi-value { font-size: 1.1rem !important; }
-            .main-title { font-size: 1.1rem !important; }
-            .career-card .title { font-size: 1.1rem !important; }
-            .career-card .institution { font-size: 0.95rem !important; }
+            .kpi-card {
+                min-height: 80px !important;
+            }
+
+            .kpi-value {
+                font-size: 1.1rem !important;
+            }
+
+            .main-title {
+                font-size: 1.1rem !important;
+            }
         }
-
-        /* Subtle professional accent colors for headings */
-        .section-title { color: #0b2545 !important; }
-        .career-card { transition: transform .18s ease, box-shadow .18s ease; }
-        .career-card:hover { transform: translateY(-6px); box-shadow: 0 18px 45px rgba(15,23,42,0.12); }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    # Top3 rendering implemented below using Streamlit primitives (no raw HTML insertion)
 
 def _get_modality_tag_class(modalidad: str) -> str:
     if modalidad == "Presencial":
@@ -228,81 +233,11 @@ def _get_modality_tag_class(modalidad: str) -> str:
     return "tag"
 
 
-def render_top3(top3):
-    st.header("🏆 Tu Top 3 Personalizado")
-
-    if not top3:
-        st.info("No hay recomendaciones para los filtros seleccionados.")
-        return
-
-    cols = st.columns(3)
-
-    def _clean_text(v):
-        if v is None:
-            return ""
-        if not isinstance(v, str):
-            return str(v)
-        # remove tags and control whitespace
-        t = _html.unescape(v)
-        t = re.sub(r'(?is)<(script|style).*?>.*?</\1>', '', t)
-        t = re.sub(r'<[^>]+>', '', t)
-        t = _html.unescape(t)
-        t = t.replace('\n', ' ').replace('\r', ' ')
-        t = re.sub(r"\s+", " ", t).strip()
-        if len(t) > 280:
-            return t[:240].rstrip() + "..."
-        return t
-
-    for idx, raw_item in enumerate(top3[:3]):
-        item = {k: raw_item.get(k) for k in raw_item.keys()}
-        area = _clean_text(item.get('area'))
-        carrera = _clean_text(item.get('carrera'))
-        institucion = _clean_text(item.get('institucion'))
-        sede = _clean_text(item.get('sede') or 'Sin sede')
-        razon = _clean_text(item.get('razon') or '')
-        modalidad = _clean_text(item.get('modalidad') or '')
-        try:
-            afinidad = float(item.get('afinidad') or 0)
-        except Exception:
-            afinidad = 0.0
-        try:
-            dur = int(float(item.get('duracion')))
-            duracion_display = f"{dur} años"
-        except Exception:
-            duracion_display = _clean_text(item.get('duracion') or '—')
-        try:
-            mat = float(item.get('costo_matricula') or 0)
-            matricula_display = f"S/. {mat:,.0f}"
-        except Exception:
-            matricula_display = _clean_text(item.get('costo_matricula') or '—')
-        try:
-            pen = float(item.get('costo_pension') or 0)
-            pension_display = f"S/. {pen:,.0f}"
-        except Exception:
-            pension_display = _clean_text(item.get('costo_pension') or '—')
-
-        with cols[idx]:
-            st.caption(area.upper())
-            st.subheader(carrera)
-            st.markdown(f"**{institucion}**")
-            st.write(f"📍 {sede}")
-            st.write(f"**{afinidad:.0f}% Match**")
-            # metrics as plain text (no HTML)
-            st.write(f"Duración: {duracion_display}   •   Matrícula: {matricula_display}   •   Mensualidad: {pension_display}")
-            # modalidades shown as simple comma-separated badges/text
-            if modalidad:
-                st.write(f"Modalidad: {modalidad}")
-            if razon:
-                st.write(f"Razón: {razon}")
-            if razon:
-                st.write(f"Razón: {razon}")
-
-
 def render_header():
     st.markdown(
         """
-    <div class="main-title">Orientación Vocacional</div>
-    <div class="subtitle">Encuentra las mejores opciones según tu perfil</div>
+    <div class="main-title">Dashboard de Decisión</div>
+    <div class="subtitle">Filtra y compara para elegir la mejor opción según tu presupuesto y tiempo.</div>
     """,
         unsafe_allow_html=True,
     )
@@ -310,107 +245,199 @@ def render_header():
 
 def render_kpis(kpis: dict):
     cols = st.columns(4)
-    labels = [
-        ("Opciones", kpis.get("opciones_compatibles", 0)),
+    cards = [
+        ("Opciones compatibles", kpis.get("opciones_compatibles", 0), "Instituciones según filtros", "kpi-blue"),
         (
-            "Mensualidad",
+            "Mensualidad prom.",
             f"S/. {kpis.get('mensualidad_promedio', 0):,.0f}" if kpis.get("mensualidad_promedio") else "S/. 0",
+            "Costo mensual estimado",
+            "kpi-green",
         ),
-        ("Duración (años)", f"{kpis.get('duracion_promedio', 0):.1f}"),
-        ("Top modalidad", kpis.get("top_modalidad", "Sin datos")),
+        ("Duración prom.", f"{kpis.get('duracion_promedio', 0):.1f} años", "Tiempo promedio de estudio", "kpi-gold"),
+        ("Top modalidad", kpis.get("top_modalidad", "Sin datos"), "Modalidad más frecuente", "kpi-violet"),
     ]
-    for c, (label, value) in zip(cols, labels):
-        with c:
+
+    for col, (label, value, sublabel, card_class) in zip(cols, cards):
+        with col:
             st.markdown(
-                f"<div class=\"kpi-card\"><div class=\"kpi-label\">{label}</div><div class=\"kpi-value\">{value}</div></div>",
+                f"<div class=\"kpi-card {card_class}\"><div class=\"kpi-label\">{label}</div><div class=\"kpi-value\">{value}</div><div class=\"kpi-sub\">{sublabel}</div></div>",
                 unsafe_allow_html=True,
             )
 
 
 def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
     st.markdown("### Visualizaciones")
-    if not bubble_df.empty:
-        color_map = {
-            "Pública": "#0f766e",
-            "Privada": "#ea580c",
-            "Instituto": "#2563eb",
-            "Universidad": "#7c3aed",
-        }
-        fig = px.scatter(
-            bubble_df,
-            x="costo_pension",
-            y="afinidad",
-            size="costo_pension",
-            color="tipo_origen" if "tipo_origen" in bubble_df.columns else None,
-            color_discrete_map=color_map,
-            hover_data=bubble_df.columns.tolist(),
-        )
-        fig.update_traces(
-            marker=dict(
-                line=dict(color="#ffffff", width=1.5),
-                opacity=0.88,
-            )
-        )
-        fig.update_layout(
-            paper_bgcolor="#ffffff",
-            plot_bgcolor="#f8fafc",
-            font=dict(color="#0f172a", size=13),
-            legend=dict(
-                title="Origen",
-                font=dict(color="#0f172a"),
-                title_font=dict(color="#0f172a"),
-            ),
-            margin=dict(l=20, r=20, t=20, b=20),
-            xaxis=dict(
-                title="Costo de pension",
-                gridcolor="#dbe3ee",
-                zeroline=False,
-                tickfont=dict(color="#0f172a"),
-                title_font=dict(color="#0f172a"),
-            ),
-            yaxis=dict(
-                title="Afinidad",
-                gridcolor="#dbe3ee",
-                zeroline=False,
-                tickfont=dict(color="#0f172a"),
-                title_font=dict(color="#0f172a"),
-            ),
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No hay datos para el gráfico de burbuja.")
+    chart_col1, chart_col2 = st.columns([2.1, 1.05])
 
-    if not modality_df.empty:
-        donut_colors = ["#0f766e", "#2563eb", "#ea580c", "#7c3aed", "#0891b2"]
-        fig = go.Figure(
-            data=[
-                go.Pie(
-                    labels=modality_df["modalidad"],
-                    values=modality_df["programas"],
-                    hole=0.62,
-                    textinfo="label+percent",
-                    textfont=dict(color="#0f172a", size=14),
-                    marker=dict(
-                        colors=donut_colors[: len(modality_df)],
-                        line=dict(color="#ffffff", width=2),
-                    ),
-                )
-            ]
-        )
-        fig.update_layout(
-            paper_bgcolor="#ffffff",
-            plot_bgcolor="#ffffff",
-            font=dict(color="#0f172a", size=13),
-            margin=dict(l=20, r=20, t=20, b=20),
-            legend=dict(
-                title="Modalidad",
-                font=dict(color="#0f172a"),
-                title_font=dict(color="#0f172a"),
-            ),
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No hay datos por modalidad.")
+    with chart_col1:
+        if not bubble_df.empty:
+            color_map = {
+                "Pública": "#5b6ee1",
+                "Privada": "#27b48a",
+                "Instituto": "#27b48a",
+                "Universidad": "#8b7cf6",
+            }
+            fig = px.scatter(
+                bubble_df,
+                x="duracion" if "duracion" in bubble_df.columns else "costo_pension",
+                y="costo_pension",
+                size="afinidad" if "afinidad" in bubble_df.columns else "costo_pension",
+                color="tipo_origen" if "tipo_origen" in bubble_df.columns else None,
+                color_discrete_map=color_map,
+                hover_data=bubble_df.columns.tolist(),
+            )
+            fig.update_traces(
+                marker=dict(line=dict(color="#ffffff", width=1.5), opacity=0.8),
+            )
+            fig.update_layout(
+                title="Inversión vs. Tiempo de Estudio",
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#ffffff",
+                font=dict(color="#1f2937", size=13),
+                margin=dict(l=20, r=20, t=60, b=20),
+                legend=dict(
+                    title="Tipo",
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="left",
+                    x=0,
+                    font=dict(color="#1f2937"),
+                    title_font=dict(color="#1f2937"),
+                ),
+                xaxis=dict(
+                    title="Duración (años)" if "duracion" in bubble_df.columns else "Costo de pensión",
+                    gridcolor="#e5e7eb",
+                    zeroline=False,
+                    tickfont=dict(color="#1f2937"),
+                    title_font=dict(color="#1f2937"),
+                ),
+                yaxis=dict(
+                    title="Mensualidad (S/.)",
+                    gridcolor="#e5e7eb",
+                    zeroline=False,
+                    tickfont=dict(color="#1f2937"),
+                    title_font=dict(color="#1f2937"),
+                ),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No hay datos para el gráfico de burbuja.")
+
+    with chart_col2:
+        if not modality_df.empty:
+            donut_colors = ["#4285f4", "#a855f7", "#27b48a", "#f59e0b", "#0ea5e9"]
+            total_programas = int(modality_df["programas"].sum())
+            fig = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=modality_df["modalidad"],
+                        values=modality_df["programas"],
+                        hole=0.68,
+                        textinfo="none",
+                        marker=dict(
+                            colors=donut_colors[: len(modality_df)],
+                            line=dict(color="#ffffff", width=2),
+                        ),
+                    )
+                ]
+            )
+            fig.add_annotation(
+                text=f"<b>{total_programas}</b><br><span style='font-size:12px;color:#6b7280'>Programas</span>",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font=dict(color="#1f2937", size=18),
+            )
+            fig.update_layout(
+                title="Oferta por Modalidad",
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#ffffff",
+                font=dict(color="#1f2937", size=13),
+                margin=dict(l=20, r=20, t=60, b=20),
+                legend=dict(
+                    title="Modalidad",
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.05,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color="#1f2937"),
+                    title_font=dict(color="#1f2937"),
+                ),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No hay datos por modalidad.")
+
+
+def render_top3(top3):
+    st.header("Tu Top 3 Personalizado")
+
+    if not top3:
+        st.info("No hay recomendaciones para los filtros seleccionados.")
+        return
+
+    cols = st.columns(3)
+
+    def _clean_text(value):
+        if value is None:
+            return ""
+        if not isinstance(value, str):
+            return str(value)
+        text = _html.unescape(value)
+        text = re.sub(r"(?is)<(script|style).*?>.*?</\1>", "", text)
+        text = re.sub(r"<[^>]+>", "", text)
+        text = _html.unescape(text)
+        text = text.replace("\n", " ").replace("\r", " ")
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) > 280:
+            return text[:240].rstrip() + "..."
+        return text
+
+    for idx, raw_item in enumerate(top3[:3]):
+        item = {k: raw_item.get(k) for k in raw_item.keys()}
+        area = _clean_text(item.get("area"))
+        carrera = _clean_text(item.get("carrera"))
+        institucion = _clean_text(item.get("institucion"))
+        sede = _clean_text(item.get("sede") or "Sin sede")
+        razon = _clean_text(item.get("razon") or "")
+        modalidad = _clean_text(item.get("modalidad") or "")
+
+        try:
+            afinidad = float(item.get("afinidad") or 0)
+        except Exception:
+            afinidad = 0.0
+
+        try:
+            dur = int(float(item.get("duracion")))
+            duracion_display = f"{dur} años"
+        except Exception:
+            duracion_display = _clean_text(item.get("duracion") or "-")
+
+        try:
+            mat = float(item.get("costo_matricula") or 0)
+            matricula_display = f"S/. {mat:,.0f}"
+        except Exception:
+            matricula_display = _clean_text(item.get("costo_matricula") or "-")
+
+        try:
+            pen = float(item.get("costo_pension") or 0)
+            pension_display = f"S/. {pen:,.0f}"
+        except Exception:
+            pension_display = _clean_text(item.get("costo_pension") or "-")
+
+        with cols[idx]:
+            st.caption(area.upper())
+            st.subheader(carrera)
+            st.markdown(f"**{institucion}**")
+            st.write(f"Sede: {sede}")
+            st.write(f"**{afinidad:.0f}% de afinidad**")
+            st.write(f"Duración: {duracion_display}   •   Matrícula: {matricula_display}   •   Mensualidad: {pension_display}")
+            if modalidad:
+                st.write(f"Modalidad: {modalidad}")
+            if razon:
+                st.write(f"Razón: {razon}")
 
 
 def render_comparison_table(df: pd.DataFrame):
@@ -437,4 +464,4 @@ def render_comparison_table(df: pd.DataFrame):
 
 
 def render_footer():
-    st.caption("Dashboard profesional de orientación vocacional · Vista dummy con filtros funcionales")
+    st.caption("Dashboard profesional de orientación vocacional")
