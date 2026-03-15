@@ -368,31 +368,59 @@ def render_top3(top3: list[dict]):
             return txt[:240].rstrip() + "..."
         return txt
 
+    def _clean_value(v):
+        # ensure string values don't contain any HTML-like fragments
+        if v is None:
+            return ""
+        if isinstance(v, str):
+            t = _html.unescape(v)
+            # remove tags and angle brackets aggressively
+            t = re.sub(r"<[^>]*>", "", t)
+            t = t.replace("&lt;", "").replace("&gt;", "")
+            # remove leftover HTML attribute patterns
+            t = re.sub(r"\w+\s*=\s*\"[^"]*\"", "", t)
+            # collapse whitespace
+            t = re.sub(r"\s+", " ", t).strip()
+            if len(t) > 280:
+                return t[:240].rstrip() + "..."
+            return t
+        return str(v)
+
     for idx, raw_item in enumerate(top3[:3]):
         # prefer numeric-safe values; build metric box from numbers only (ignore any HTML blobs)
         item = {k: raw_item.get(k) for k in raw_item.keys()}
         modalidad_raw = item.get("modalidad") or "Sin modalidad"
         # modalidad may be comma-separated; render individual tags
         modalidades = [m.strip() for m in str(modalidad_raw).split(",") if m.strip()]
+        # numeric-safe parsing
         try:
             afinidad_val = float(item.get("afinidad") or 0)
         except Exception:
             afinidad_val = 0.0
-        duracion_val = item.get("duracion") if item.get("duracion") is not None else "—"
+        # duracion may be numeric or textual; prefer numeric
+        try:
+            duracion_val = int(float(item.get("duracion")))
+            duracion_display = f"{duracion_val} años"
+        except Exception:
+            duracion_display = _clean_value(item.get("duracion") or "—")
+
         try:
             costo_matricula_val = float(item.get("costo_matricula") or 0)
+            costo_matricula_display = f"S/. {costo_matricula_val:,.0f}"
         except Exception:
-            costo_matricula_val = 0.0
+            costo_matricula_display = _clean_value(item.get("costo_matricula") or "—")
+
         try:
             costo_pension_val = float(item.get("costo_pension") or 0)
+            costo_pension_display = f"S/. {costo_pension_val:,.0f}"
         except Exception:
-            costo_pension_val = 0.0
+            costo_pension_display = _clean_value(item.get("costo_pension") or "—")
 
-        area_val = _strip_tags(item.get("area") or "")
-        carrera_val = _strip_tags(item.get("carrera") or "")
-        institucion_val = _strip_tags(item.get("institucion") or "")
-        sede_val = _strip_tags(item.get("sede") or "Sin sede")
-        razon_val = _strip_tags(item.get("razon") or "")
+        area_val = _clean_value(item.get("area") or "")
+        carrera_val = _clean_value(item.get("carrera") or "")
+        institucion_val = _clean_value(item.get("institucion") or "")
+        sede_val = _clean_value(item.get("sede") or "Sin sede")
+        razon_val = _clean_value(item.get("razon") or "")
 
         with cols[idx]:
             # build HTML for card using sanitized values
@@ -409,14 +437,14 @@ def render_top3(top3: list[dict]):
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <div>
                             <div class="metric-label">⏱ Duración</div>
-                            <div class="metric-value">{duracion_val} años</div>
+                            <div class="metric-value">{duracion_display}</div>
                         </div>
                         <div style="text-align:right">
                             <div class="metric-label">🧾 Matrícula</div>
-                            <div class="metric-value">S/. {costo_matricula_val:,.0f}</div>
+                            <div class="metric-value">{costo_matricula_display}</div>
                             <div style="height:6px"></div>
                             <div class="metric-label">💸 Mensualidad</div>
-                            <div class="metric-value">S/. {costo_pension_val:,.0f}</div>
+                            <div class="metric-value">{costo_pension_display}</div>
                         </div>
                     </div>
                 </div>
