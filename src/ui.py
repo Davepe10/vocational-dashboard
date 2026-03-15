@@ -318,22 +318,22 @@ def render_charts(bubble_df: pd.DataFrame, modality_df: pd.DataFrame):
                 modality_df,
                 values="programas",
                 names="modalidad",
-                hole=0.65,
+                hole=0.55,
                 color_discrete_sequence=["#2563eb", "#a855f7", "#10B981"],
             )
             fig2.update_traces(textinfo='none')
             fig2.update_layout(
-                height=430,
-                margin=dict(l=10, r=10, t=10, b=10),
+                height=420,
+                margin=dict(l=10, r=140, t=10, b=10),
                 paper_bgcolor="white",
                 showlegend=True,
-                legend=dict(font=dict(color="#0f172a")),
-                annotations=[dict(text=f"{int(modality_df['programas'].sum())}<br>Programas", x=0.5, y=0.5, font_size=16, showarrow=False, font_color="#0f172a")],
+                legend=dict(font=dict(color="#0f172a"), y=0.5),
+                annotations=[dict(text=f"{int(modality_df['programas'].sum())}<br>Programas", x=0.5, y=0.5, font_size=18, showarrow=False, font_color="#0f172a")],
             )
             fig2.update_traces(marker=dict(line=dict(color="#ffffff", width=1)))
-            # ensure pie is centered and uses most of the card area
-            fig2.update_traces(domain=dict(x=[0.15, 0.85], y=[0.15, 0.85]))
-            fig2.update_layout(legend=dict(orientation='v', x=1.02, xanchor='left'))
+            # enlarge and center pie so it uses more of the card; keep legend vertically centered at right
+            fig2.update_traces(domain=dict(x=[0.06, 0.86], y=[0.12, 0.88]))
+            fig2.update_layout(legend=dict(orientation='v', x=0.95, xanchor='left'))
             st.plotly_chart(fig2, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -374,11 +374,17 @@ def render_top3(top3: list[dict]):
             return ""
         if isinstance(v, str):
             t = _html.unescape(v)
-            # remove tags and angle brackets aggressively
-            t = re.sub(r"<[^>]*>", "", t)
-            t = t.replace("&lt;", "").replace("&gt;", "")
-            # remove leftover HTML attribute patterns
-            t = re.sub(r'\w+\s*=\s*"[^"]*"', "", t)
+            # strip script/style blocks first
+            t = re.sub(r'(?is)<(script|style).*?>.*?</\1>', '', t)
+            # remove any HTML tags
+            t = re.sub(r'<[^>]+>', '', t)
+            # unescape entities, remove leftover angle brackets
+            t = _html.unescape(t)
+            t = t.replace('&lt;', '').replace('&gt;', '')
+            t = t.replace('<', '').replace('>', '')
+            # remove HTML attribute patterns like class="..." and any mention of 'div' leftovers
+            t = re.sub(r'class\s*=\s*"[^"]*"', '', t)
+            t = re.sub(r'\bdiv\b', '', t, flags=re.I)
             # collapse whitespace
             t = re.sub(r"\s+", " ", t).strip()
             if len(t) > 280:
